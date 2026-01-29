@@ -1,0 +1,401 @@
+# Example: Design Spec for User Authentication API
+# This demonstrates a well-structured architect output
+
+meta:
+  ticket_id: "SQUAD-42"
+  author: architect
+  version: "1.0"
+  created_at: "2024-01-15T10:30:00Z"
+
+assumptions:
+  - assumption: "OAuth 2.0 is the preferred authentication standard"
+    source: stated
+    risk: LOW
+    validation: "Confirmed in requirements doc section 3.2"
+
+  - assumption: "Session tokens expire after 1 hour"
+    source: inferred
+    risk: MEDIUM
+    validation: "Need confirmation from security team"
+
+  - assumption: "Rate limiting exists at API gateway level"
+    source: undocumented
+    risk: HIGH
+    validation: "Verify with infrastructure team before implementation"
+
+system_context:
+  existing_patterns:
+    - pattern: "Repository pattern for data access"
+      location: "src/repositories/*.py"
+      following: true
+      deviation_reason: null
+
+    - pattern: "Custom exception hierarchy"
+      location: "src/exceptions.py"
+      following: true
+      deviation_reason: null
+
+    - pattern: "Sync database sessions"
+      location: "src/db/session.py"
+      following: false
+      deviation_reason: "Auth requires async for token validation performance"
+
+  integration_points:
+    - module: "src/api/middleware.py"
+      interface: "Add AuthMiddleware to request pipeline"
+      changes_required: true
+
+    - module: "src/models/user.py"
+      interface: "Add password_hash and last_login fields"
+      changes_required: true
+
+  files_to_modify:
+    - "src/api/middleware.py"
+    - "src/models/user.py"
+    - "src/api/routes/__init__.py"
+
+  new_files:
+    - "src/auth/__init__.py"
+    - "src/auth/service.py"
+    - "src/auth/repository.py"
+    - "src/auth/tokens.py"
+    - "src/api/routes/auth.py"
+
+overview:
+  summary: |
+    OAuth 2.0 compliant authentication system with JWT tokens. Supports
+    username/password login, token refresh, and session invalidation.
+    Integrates with existing user model via new AuthService.
+
+  components:
+    - name: AuthService
+      responsibility: "Coordinates authentication flow, validates credentials"
+      dependencies: [UserRepository, TokenService, PasswordHasher]
+
+    - name: TokenService
+      responsibility: "JWT token creation, validation, and refresh"
+      dependencies: [TokenRepository]
+
+    - name: AuthMiddleware
+      responsibility: "Extracts and validates tokens from requests"
+      dependencies: [TokenService]
+
+interfaces:
+  - name: AuthService
+    type: protocol
+    language: python
+    definition: |
+      from typing import Protocol
+      from dataclasses import dataclass
+
+      @dataclass
+      class AuthResult:
+          access_token: str
+          refresh_token: str
+          expires_in: int
+          token_type: str = "Bearer"
+
+      @dataclass
+      class TokenClaims:
+          user_id: str
+          email: str
+          roles: list[str]
+          exp: int
+          iat: int
+
+      class AuthServiceProtocol(Protocol):
+          async def authenticate(
+              self,
+              email: str,
+              password: str
+          ) -> AuthResult:
+              """Validate credentials and return tokens."""
+              ...
+
+          async def refresh(
+              self,
+              refresh_token: str
+          ) -> AuthResult:
+              """Exchange refresh token for new access token."""
+              ...
+
+          async def revoke(
+              self,
+              user_id: str
+          ) -> None:
+              """Invalidate all tokens for user."""
+              ...
+
+          async def validate(
+              self,
+              access_token: str
+          ) -> TokenClaims:
+              """Validate token and return claims."""
+              ...
+
+  - name: TokenRepository
+    type: protocol
+    language: python
+    definition: |
+      from typing import Protocol
+      from datetime import datetime
+
+      class TokenRepositoryProtocol(Protocol):
+          async def store_refresh_token(
+              self,
+              user_id: str,
+              token_hash: str,
+              expires_at: datetime
+          ) -> None:
+              ...
+
+          async def is_token_valid(
+              self,
+              user_id: str,
+              token_hash: str
+          ) -> bool:
+              ...
+
+          async def revoke_all_tokens(
+              self,
+              user_id: str
+          ) -> int:
+              """Returns count of revoked tokens."""
+              ...
+
+data_flow:
+  description: |
+    1. Client sends credentials to /auth/login
+    2. AuthService validates against UserRepository
+    3. On success, TokenService generates JWT pair
+    4. Refresh token hash stored in TokenRepository
+    5. Tokens returned to client
+    6. Subsequent requests include access token in Authorization header
+    7. AuthMiddleware validates token on each request
+
+  steps:
+    - from: Client
+      to: AuthController
+      data: "email, password"
+      format: JSON
+
+    - from: AuthController
+      to: AuthService
+      data: "credentials"
+      format: "Python dataclass"
+
+    - from: AuthService
+      to: UserRepository
+      data: "email lookup"
+      format: "SQL query"
+
+    - from: AuthService
+      to: TokenService
+      data: "user claims"
+      format: "Python dict"
+
+    - from: TokenService
+      to: Client
+      data: "access_token, refresh_token"
+      format: JSON
+
+error_handling:
+  - scenario: "Invalid credentials"
+    detection: "Password hash mismatch"
+    response: "Return 401 with generic 'Invalid credentials' message"
+    recovery: "Client retries with correct credentials"
+
+  - scenario: "Expired access token"
+    detection: "JWT exp claim in past"
+    response: "Return 401 with 'token_expired' error code"
+    recovery: "Client uses refresh token to get new access token"
+
+  - scenario: "Revoked refresh token"
+    detection: "Token hash not in repository"
+    response: "Return 401 with 'token_revoked' error code"
+    recovery: "User must re-authenticate with credentials"
+
+  - scenario: "Rate limit exceeded"
+    detection: "Redis counter > threshold"
+    response: "Return 429 with Retry-After header"
+    recovery: "Client waits and retries"
+
+threat_model:
+  - threat: "Credential stuffing attack"
+    category: S
+    severity: HIGH
+    mitigation: "Rate limiting per IP and per account, CAPTCHA after 3 failures"
+    residual_risk: "Distributed attacks may bypass IP rate limiting"
+
+  - threat: "JWT token theft via XSS"
+    category: I
+    severity: HIGH
+    mitigation: "HttpOnly cookies for refresh token, short access token TTL"
+    residual_risk: "Access token in memory still vulnerable during TTL"
+
+  - threat: "Brute force password attack"
+    category: S
+    severity: MEDIUM
+    mitigation: "Account lockout after 10 failures, progressive delays"
+    residual_risk: "Account enumeration still possible via timing"
+
+  - threat: "Token replay attack"
+    category: T
+    severity: MEDIUM
+    mitigation: "Short TTL, JTI claim for one-time tokens if needed"
+    residual_risk: "Tokens valid for full TTL window"
+
+  - threat: "Privilege escalation via token manipulation"
+    category: E
+    severity: CRITICAL
+    mitigation: "RS256 signing, server-side role validation"
+    residual_risk: "Key compromise would allow full escalation"
+
+  - threat: "Denial of service via auth endpoint"
+    category: D
+    severity: MEDIUM
+    mitigation: "Rate limiting, async processing, connection pooling"
+    residual_risk: "Sophisticated attacks may still degrade service"
+
+nfr:
+  reliability:
+    uptime_sla: "99.95%"
+    mttr_target: "< 10 minutes"
+    failure_modes:
+      - "Database connection pool exhaustion"
+      - "Redis cache unavailable"
+      - "JWT signing key rotation"
+
+  performance:
+    p50_latency_ms: 50
+    p95_latency_ms: 150
+    p99_latency_ms: 300
+    throughput: "500 auth/sec"
+
+  scalability:
+    max_concurrent_users: 10000
+    data_volume: "1M user accounts"
+    growth_projection: "2x users over 12 months"
+
+observability:
+  metrics:
+    - name: "auth_login_total"
+      type: counter
+      labels: [status, method]
+      alert_threshold: "error_rate > 5% for 5m"
+
+    - name: "auth_token_refresh_total"
+      type: counter
+      labels: [status]
+      alert_threshold: null
+
+    - name: "auth_latency_seconds"
+      type: histogram
+      labels: [endpoint]
+      alert_threshold: "p99 > 500ms for 5m"
+
+    - name: "auth_active_sessions"
+      type: gauge
+      labels: []
+      alert_threshold: "> 50000"
+
+  logging:
+    - event: "login_attempt"
+      level: INFO
+      fields: [user_id, ip_address, user_agent, success]
+
+    - event: "token_refresh"
+      level: INFO
+      fields: [user_id, old_token_jti]
+
+    - event: "token_revocation"
+      level: WARN
+      fields: [user_id, reason, revoked_count]
+
+    - event: "auth_failure"
+      level: WARN
+      fields: [email_hash, ip_address, failure_reason]
+
+  tracing:
+    - span_name: "auth.login"
+      attributes: [user_id, auth_method]
+      parent: null
+
+    - span_name: "auth.validate_password"
+      attributes: [algorithm]
+      parent: "auth.login"
+
+    - span_name: "auth.generate_tokens"
+      attributes: [token_type]
+      parent: "auth.login"
+
+  alerts:
+    - name: "HighAuthFailureRate"
+      condition: "auth_login_total{status='failure'} / auth_login_total > 0.1"
+      severity: page
+      runbook: "https://wiki/runbooks/auth-failures"
+
+    - name: "AuthLatencyDegraded"
+      condition: "histogram_quantile(0.99, auth_latency_seconds) > 0.5"
+      severity: ticket
+      runbook: "https://wiki/runbooks/auth-latency"
+
+eval_criteria:
+  performance_tests:
+    - scenario: "Sustained login load"
+      target: "500 req/sec with p99 < 300ms"
+      method: "k6 load test for 10 minutes"
+
+    - scenario: "Token validation throughput"
+      target: "10000 validations/sec"
+      method: "Benchmark test with pre-generated tokens"
+
+  reliability_tests:
+    - failure_type: "Database failover"
+      expected_behavior: "Requests queue, no data loss"
+      recovery_time: "< 30 seconds"
+
+    - failure_type: "Redis unavailable"
+      expected_behavior: "Graceful degradation, refresh tokens still work"
+      recovery_time: "Immediate fallback"
+
+  security_checklist:
+    - requirement: "Passwords hashed with bcrypt, cost factor >= 12"
+      verification: "Code review + unit test"
+
+    - requirement: "No sensitive data in JWT payload"
+      verification: "Token inspection test"
+
+    - requirement: "HTTPS required for all auth endpoints"
+      verification: "Integration test with HTTP fails"
+
+    - requirement: "Rate limiting active"
+      verification: "Load test triggers 429 responses"
+
+open_questions:
+  - question: "Should we support SSO/SAML in initial release?"
+    impact: HIGH
+    default_assumption: "No, defer to v2"
+
+  - question: "What is the password complexity policy?"
+    impact: MEDIUM
+    default_assumption: "Min 8 chars, 1 upper, 1 lower, 1 number"
+
+confidence:
+  overall: 0.85
+  areas:
+    - area: "Core authentication flow"
+      confidence: 0.95
+      reasoning: "Well-understood OAuth 2.0 patterns"
+
+    - area: "Performance targets"
+      confidence: 0.80
+      reasoning: "Based on similar systems, need load testing to verify"
+
+    - area: "Security threat model"
+      confidence: 0.85
+      reasoning: "Standard STRIDE analysis, may miss novel attacks"
+
+    - area: "Integration with existing code"
+      confidence: 0.75
+      reasoning: "Need spike to verify async compatibility"

@@ -1,0 +1,64 @@
+# Example: Gate 2 Code Review for Authentication Implementation
+# This demonstrates a thorough code review with architectural checks
+
+meta:
+  ticket_id: "SQUAD-42"
+  gate: gate_2
+  reviewer: bouncer
+  reviewed_at: "2024-01-16T14:30:00Z"
+
+decision: APPROVED
+
+design_review: null  # Not applicable for Gate 2
+
+code_review:
+  implementation_matches_design: PASS
+  tests_passing: PASS
+  code_style: PASS
+  error_handling: PASS
+
+  architectural_drift:
+    circular_dependencies: PASS
+    layer_violations: PASS
+    god_objects: PASS
+    pattern_consistency: PASS
+    complexity_budget: PASS
+    details: "Implementation follows repository pattern consistent with existing codebase"
+
+  dead_code:
+    unused_imports: PASS
+    unused_functions: PASS
+    unreachable_code: PASS
+    commented_code: PASS
+    vulture_output: |
+      $ vulture src/auth/ --min-confidence 80
+      No unused code detected
+
+  security:
+    hardcoded_secrets: PASS
+    input_validation: PASS
+    sql_injection: PASS
+    xss: PASS
+    auth_checks: PASS
+    dependencies: PASS
+    sensitive_logging: PASS
+
+preprod_review: null  # Not applicable for Gate 2
+
+feedback:
+  summary: "Clean implementation that follows the design spec and project patterns"
+  strengths:
+    - "Password hashing uses bcrypt with appropriate cost factor (12)"
+    - "JWT tokens have proper expiration and claims validation"
+    - "Good separation between AuthService and TokenService"
+    - "Comprehensive error handling with custom exceptions"
+  issues: []
+  suggestions:
+    - "Consider adding request ID to auth logs for tracing"
+    - "Token refresh endpoint could benefit from rate limiting"
+
+action_items: []
+
+confidence:
+  score: 92
+  rationale: "All automated checks pass, code follows established patterns, security checklist fully addressed"

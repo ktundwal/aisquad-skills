@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.json
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Specstory (IDE extension)
+.specstory/
+
+# Test outputs
+outputs/
+
+# Data artifacts (generated during runs)
+data/logs/
+data/kanban/*/TICKET-*.yaml
+data/tdd_state/
+
+# Lock files (from file locking)
+*.yaml.lock
+
+# Stream logs (JSONL execution logs)
+*.jsonl
+
+# Generated reports
+QA_REPORT_*.md

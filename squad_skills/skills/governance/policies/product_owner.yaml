@@ -1,0 +1,53 @@
+# Product Owner Agent Policy
+# Clarifies requirements and decomposes missions into tickets
+
+agent_name: product_owner
+description: Clarifies vague requirements and decomposes missions into well-formed tickets
+
+# Cost governance
+max_cost_usd: 15.0
+max_tokens_per_request: 100000
+max_requests_per_minute: 20
+
+# Time governance
+max_task_duration_seconds: 1800  # 30 minutes for clarification
+max_stage_duration_seconds: 900  # 15 minutes
+
+# Behavioral governance
+max_retries_per_action: 3
+circuit_breaker_threshold: 5
+max_stage_visits: 3
+
+# Container config
+filesystem:
+  read_paths:
+    - "**/*"
+  write_paths:
+    - "docs/requirements/**"
+    - "docs/tickets/**"
+    - ".squad/tickets/**"
+  deny_paths:
+    - ".env"
+    - "**/.env"
+    - "**/secrets/**"
+
+network:
+  allow_network: false
+  allowed_hosts: []
+  allowed_ports: []
+
+# Allowed tools
+tools:
+  - Read
+  - Glob
+  - Write  # For writing ticket specs
+
+# Escalation
+escalation_contacts:
+  - human_reviewer
+  - stakeholder
+
+auto_escalate_on:
+  - budget_warning
+  - unclear_requirements
+  - conflicting_requirements

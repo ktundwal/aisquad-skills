@@ -1,0 +1,79 @@
+# Incident Report Template
+# Use this during and after incidents
+
+meta:
+  incident_id: string          # e.g., "INC-2024-001"
+  reported_at: ISO8601
+  resolved_at: ISO8601 | null
+  reporter: string
+  commander: on_call
+
+# Current status
+status: enum                   # INVESTIGATING | MITIGATING | RESOLVED | POSTMORTEM
+
+# Severity assessment
+severity:
+  level: enum                  # P1 | P2 | P3 | P4
+  ttr_target_minutes: number   # Based on severity
+  impact_summary: string
+
+# What's happening
+summary:
+  title: string                # One-line description
+  description: string          # Detailed description
+  affected_systems: [string]
+  affected_users: string       # e.g., "All users", "10% of users"
+
+# Impact assessment
+impact:
+  user_facing: boolean
+  data_loss: boolean
+  revenue_impact: string | null
+  reputation_impact: string | null
+
+# Timeline (append-only log)
+timeline:
+  - timestamp: ISO8601
+    action: string
+    actor: string              # Who did this
+    outcome: string | null
+
+# Detection
+detection:
+  how_detected: enum           # alert | user_report | monitoring | other
+  time_to_detect_minutes: number
+  alert_name: string | null
+  met_5_minute_target: boolean
+
+# Mitigation
+mitigation:
+  current_status: string       # What we've done so far
+  actions_taken:
+    - action: string
+      result: enum             # HELPED | NO_EFFECT | MADE_WORSE
+  rollback_performed: boolean
+  feature_flags_used: [string]
+
+# Resolution
+resolution:
+  root_cause: string | null    # Only known after investigation
+  fix_description: string | null
+  time_to_resolve_minutes: number | null
+  met_25_minute_target: boolean | null
+  permanent_fix_ticket: string | null  # Follow-up ticket for proper fix
+
+# Communication
+communication:
+  stakeholders_notified: boolean
+  status_page_updated: boolean
+  customer_comms: string | null
+
+# Post-incident (for POSTMORTEM status)
+postmortem:
+  scheduled: boolean
+  date: ISO8601 | null
+  action_items:
+    - description: string
+      owner: string
+      due_date: ISO8601
+      ticket_id: string | null

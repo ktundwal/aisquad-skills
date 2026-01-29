@@ -1,0 +1,45 @@
+# Example: Responding to Budget Warning
+
+warning_response:
+  warning_type: budget
+
+  current_status:
+    metric: budget_usd
+    current_value: "8.50"
+    limit_value: "10.00"
+    percentage: "85%"
+
+  assessment:
+    remaining_work:
+      - "Implement login endpoint (estimated $0.80)"
+      - "Add input validation (estimated $0.30)"
+      - "Write unit tests (estimated $0.50)"
+    estimated_cost: "$1.60"
+    can_complete_within_limits: "no"
+
+  action_plan:
+    if_can_complete:
+      - "Not applicable - over budget"
+    if_cannot_complete:
+      - "Complete login endpoint implementation (critical path)"
+      - "Document validation requirements for next session"
+      - "Escalate with partially complete work"
+
+  immediate_action: "Completing login endpoint, then escalating with remaining tasks documented"
+
+# Corresponding agent message:
+#
+# ⚠️ GOVERNANCE WARNING: Budget
+#
+# Current status:
+# - Budget: $8.50 / $10.00 (85%)
+#
+# Assessment:
+# - Remaining work: login endpoint, validation, tests
+# - Estimated cost: $1.60
+# - Can complete within limits: No
+#
+# Action:
+# - I will complete the login endpoint (critical path)
+# - Document remaining work for follow-up
+# - Escalate before budget exhaustion

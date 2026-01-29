@@ -1,0 +1,62 @@
+# Review Decision Contract v1.0.0
+# Producer: bouncer
+# Consumers: manager, orchestrator
+
+version: "1.0.0"
+
+# Reference to full template
+template: "../bouncer/templates/review.yaml"
+
+# Required sections for handoff
+required_fields:
+  - meta.ticket_id
+  - meta.gate
+  - decision                     # APPROVED | REJECTED
+  - confidence.score
+  - confidence.rationale
+
+# Gate-specific requirements
+gate_1_requirements:
+  - design_review                # All design checks
+  - feedback.summary
+
+gate_2_requirements:
+  - code_review                  # All code checks
+  - code_review.architectural_drift
+  - code_review.security
+  - feedback.summary
+
+gate_3_requirements:
+  - preprod_review               # All pre-prod checks
+  - feedback.summary
+
+# When REJECTED, these are required
+rejection_requirements:
+  - action_items                 # At least one action item
+  - action_items[*].description
+  - action_items[*].severity
+
+# Routing rules for orchestrator
+routing:
+  APPROVED:
+    gate_1: "advance to DEV stage, assign to dev"
+    gate_2: "advance to TESTING stage, assign to qa_engineer"
+    gate_3: "advance to DONE, close ticket"
+
+  REJECTED:
+    gate_1: "return to architect with action_items"
+    gate_2: "return to senior_dev with action_items"
+    gate_3: "return to qa_engineer with action_items"
+
+validation_rules:
+  - name: "rejection_has_action_items"
+    description: "Rejections must include actionable feedback"
+    check: "decision == 'REJECTED' implies len(action_items) > 0"
+
+  - name: "security_fail_blocks"
+    description: "Security failures must result in rejection"
+    check: "any(security.* == 'FAIL') implies decision == 'REJECTED'"
+
+  - name: "confidence_matches_decision"
+    description: "Low confidence with approval should have rationale"
+    check: "confidence.score < 70 and decision == 'APPROVED' implies len(confidence.rationale) > 50"

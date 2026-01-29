@@ -1,0 +1,154 @@
+# Design Specification Template
+# Fill in all sections. Use null for sections that don't apply.
+# All string values support markdown formatting.
+
+meta:
+  ticket_id: string          # e.g., "SQUAD-123"
+  author: architect
+  version: "1.0"
+  created_at: ISO8601        # e.g., "2024-01-15T10:30:00Z"
+
+# Document all assumptions made during design
+assumptions:
+  - assumption: string       # What you're assuming
+    source: enum             # stated | inferred | undocumented
+    risk: enum               # LOW | MEDIUM | HIGH
+    validation: string       # How to verify this assumption
+
+# Brownfield analysis (null for greenfield projects)
+system_context:
+  existing_patterns:
+    - pattern: string        # e.g., "Repository pattern for data access"
+      location: string       # File paths where pattern is used
+      following: boolean     # true if your design follows this
+      deviation_reason: string | null  # Why deviating (if not following)
+
+  integration_points:
+    - module: string         # Existing module name
+      interface: string      # How new code connects
+      changes_required: boolean
+
+  files_to_modify: [string]  # Existing files that need changes
+  new_files: [string]        # New files to create
+
+# High-level design overview
+overview:
+  summary: string            # 2-3 sentence description
+  components:
+    - name: string
+      responsibility: string
+      dependencies: [string]
+
+# Interface definitions (code blocks)
+interfaces:
+  - name: string             # e.g., "UserRepository"
+    type: enum               # protocol | abstract_class | interface
+    language: string         # python | typescript | etc.
+    definition: |
+      # Code block with interface definition
+      class MyProtocol(Protocol):
+          def method(self, arg: str) -> Result: ...
+
+# Data flow between components
+data_flow:
+  description: string        # Narrative description
+  steps:
+    - from: string           # Source component
+      to: string             # Destination component
+      data: string           # What data is passed
+      format: string         # Data format (JSON, protobuf, etc.)
+
+# Error handling strategy
+error_handling:
+  - scenario: string         # e.g., "Database connection timeout"
+    detection: string        # How error is detected
+    response: string         # What happens when error occurs
+    recovery: string         # How system recovers
+
+# STRIDE Threat Model (MANDATORY)
+threat_model:
+  - threat: string           # Description of the threat
+    category: enum           # S | T | R | I | D | E
+    severity: enum           # LOW | MEDIUM | HIGH | CRITICAL
+    mitigation: string       # How to prevent/mitigate
+    residual_risk: string    # Remaining risk after mitigation
+
+# STRIDE categories:
+# S = Spoofing (authentication)
+# T = Tampering (integrity)
+# R = Repudiation (non-repudiation)
+# I = Information Disclosure (confidentiality)
+# D = Denial of Service (availability)
+# E = Elevation of Privilege (authorization)
+
+# Non-Functional Requirements (must be measurable)
+nfr:
+  reliability:
+    uptime_sla: string       # e.g., "99.9%"
+    mttr_target: string      # e.g., "< 15 minutes"
+    failure_modes: [string]  # Known failure scenarios
+
+  performance:
+    p50_latency_ms: number
+    p95_latency_ms: number
+    p99_latency_ms: number
+    throughput: string       # e.g., "1000 req/sec"
+
+  scalability:
+    max_concurrent_users: number
+    data_volume: string      # e.g., "10TB"
+    growth_projection: string
+
+# Observability requirements
+observability:
+  metrics:
+    - name: string           # Metric name
+      type: enum             # counter | gauge | histogram
+      labels: [string]       # Dimension labels
+      alert_threshold: string | null
+
+  logging:
+    - event: string          # What event to log
+      level: enum            # DEBUG | INFO | WARN | ERROR
+      fields: [string]       # Structured fields to include
+
+  tracing:
+    - span_name: string      # Trace span name
+      attributes: [string]   # Span attributes
+      parent: string | null  # Parent span (null for root)
+
+  alerts:
+    - name: string           # Alert name
+      condition: string      # When to fire
+      severity: enum         # page | ticket | log
+      runbook: string | null # Link to runbook
+
+# Evaluation criteria for validation
+eval_criteria:
+  performance_tests:
+    - scenario: string       # Test scenario
+      target: string         # Expected result
+      method: string         # How to measure
+
+  reliability_tests:
+    - failure_type: string   # What fails
+      expected_behavior: string
+      recovery_time: string
+
+  security_checklist:
+    - requirement: string    # Security requirement
+      verification: string   # How to verify
+
+# Questions requiring clarification
+open_questions:
+  - question: string
+    impact: enum             # LOW | MEDIUM | HIGH
+    default_assumption: string | null  # What we'll assume if not answered
+
+# Confidence assessment
+confidence:
+  overall: number            # 0.0 - 1.0
+  areas:
+    - area: string
+      confidence: number     # 0.0 - 1.0
+      reasoning: string

@@ -1,0 +1,49 @@
+# Implementation Report Template
+# Report what was implemented to make tests pass
+
+meta:
+  ticket_id: string          # e.g., "SQUAD-123"
+  implementer: senior_dev
+  tdd_cycle: number          # Which red-green-refactor cycle
+  completed_at: ISO8601      # e.g., "2024-01-15T10:30:00Z"
+
+# Tests that were made to pass
+tests_addressed:
+  - test_file: string        # Path to test file
+    test_name: string        # Test function/method name
+    status: enum             # PASSED | STILL_FAILING
+
+# Files changed
+changes:
+  - file: string             # Path to changed file
+    action: enum             # created | modified | deleted
+    lines_added: number
+    lines_removed: number
+    summary: string          # Brief description of change
+
+# Patterns followed
+patterns_applied:
+  - name: string             # Pattern name (e.g., "Repository pattern")
+    location: string         # Where in codebase you found it
+    deviation: string | null # Any deviation from pattern (with justification)
+
+# Verification
+verification:
+  tests_run: boolean
+  tests_passing: boolean
+  linter_run: boolean
+  linter_clean: boolean
+  test_output: |
+    # Paste relevant test output
+    string | null
+
+# Any issues encountered
+issues:
+  - description: string
+    resolution: string       # How you resolved it
+    spike_needed: boolean    # Did this require a spike?
+
+# Confidence assessment
+confidence:
+  score: number              # 0.0 - 1.0
+  rationale: string

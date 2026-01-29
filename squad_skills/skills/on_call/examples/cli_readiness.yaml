@@ -1,0 +1,127 @@
+# Example: Operational Readiness Review for CLI Tool
+
+meta:
+  ticket_id: "SQUAD-55"
+  reviewer: on_call
+  deployment_type: cli
+  reviewed_at: "2024-01-17T15:00:00Z"
+
+five_twenty_five:
+  time_to_detect:
+    target_minutes: 5
+    estimated_minutes: 10
+    confidence: 70
+    rationale: "CLI issues detected via user reports and opt-in telemetry; no real-time monitoring"
+    status: AT_RISK
+
+  time_to_resolve:
+    target_minutes: 25
+    estimated_minutes: 60
+    confidence: 60
+    rationale: "CLI releases require user action to update; hotfix takes ~1 hour to publish"
+    status: AT_RISK
+
+observability:
+  metrics:
+    status: PARTIAL
+    items:
+      - name: "squad_cli_command_duration_seconds"
+        type: histogram
+        implemented: true
+        dashboard: null
+
+      - name: "squad_cli_errors_total"
+        type: counter
+        implemented: true
+        dashboard: null
+    gaps:
+      - "No real-time dashboard (batch telemetry only)"
+
+  logging:
+    status: COMPLETE
+    structured: true
+    trace_ids: false           # Not applicable for CLI
+    levels_appropriate: true
+    pii_check: PASS
+    gaps: []
+
+  alerting:
+    status: PARTIAL
+    alerts:
+      - name: "squad_cli_error_spike"
+        condition: "Daily error count > 2x rolling average"
+        severity: warning
+        runbook: "https://wiki/runbooks/cli-errors"
+    gaps:
+      - "Alerts are daily batched, not real-time"
+
+  dashboards:
+    status: PARTIAL
+    links:
+      - "https://analytics/squad-cli"
+    gaps:
+      - "Dashboard shows T-1 day data, not real-time"
+
+detectability:
+  health_checks:
+    implemented: false         # Not applicable for CLI
+    endpoints: []
+    frequency_seconds: 0
+
+  synthetic_monitoring:
+    implemented: true
+    critical_paths_covered:
+      - "squad init"
+      - "squad run"
+      - "squad deploy"
+    gaps:
+      - "Only runs hourly in CI"
+
+  on_call_notification:
+    configured: true
+    escalation_path: "Slack: #squad-cli-alerts -> PagerDuty (P1 only)"
+
+recoverability:
+  rollback:
+    procedure_documented: true
+    tested: true
+    estimated_minutes: 60      # Time to publish hotfix
+    runbook_link: "https://wiki/runbooks/cli-hotfix"
+
+  feature_flags:
+    kill_switches:
+      - "cli.experimental_features"
+    tested: true
+
+  data_recovery:
+    backup_exists: false       # Not applicable
+    restore_tested: false
+    rpo_minutes: 0
+    rto_minutes: 0
+
+supportability:
+  error_messages:
+    actionable: true
+    unique_codes: true
+
+  documentation:
+    troubleshooting_guide: true
+    known_issues: true
+    architecture_diagram: false  # Not needed for CLI
+
+  reproduction:
+    local_env_documented: true
+    test_data_available: true
+
+decision: CONDITIONAL
+
+conditions:
+  - "Add prominent error reporting prompt for critical failures"
+  - "Document user self-help for common issues"
+  - "Ensure --version shows commit hash for debugging"
+
+blockers: []
+
+confidence:
+  score: 75
+  rationale: "CLI cannot meet 5-25 targets due to distribution model, but risk is acceptable with conditions"

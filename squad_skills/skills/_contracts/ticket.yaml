@@ -1,0 +1,78 @@
+# Ticket Contract v1.0.0
+# Producer: product_owner
+# Consumers: architect, manager, dev, senior_dev, qa_engineer
+
+version: "1.0.0"
+
+schema:
+  id: string                     # Unique ticket identifier (e.g., "SQUAD-123")
+  title: string                  # Brief description of the work
+  type: enum                     # feature | bug | spike | tech_debt
+  priority: enum                 # P0 | P1 | P2 | P3
+  status: enum                   # backlog | ready | in_progress | review | done
+
+  # What needs to be done (required)
+  description: string            # Detailed description of the work
+
+  # Acceptance criteria (required, at least one)
+  acceptance_criteria:
+    - criterion: string          # What needs to be true for acceptance
+      eval_script: string | null # Script to verify this criterion
+      threshold: string | null   # Pass/fail threshold if applicable
+
+  # Technical constraints (optional)
+  constraints:
+    nfr:                         # Non-functional requirements
+      performance: string | null
+      reliability: string | null
+      scalability: string | null
+    dependencies: [string]       # Other tickets that must complete first
+    affected_areas: [string]     # Code areas likely to be modified
+
+  # Metadata
+  meta:
+    created_by: string
+    created_at: ISO8601
+    assigned_to: string | null
+    stage: enum                  # DESIGN | DEV | TESTING | REVIEW
+
+example:
+  id: "SQUAD-42"
+  title: "Add user authentication via OAuth 2.0"
+  type: feature
+  priority: P1
+  status: ready
+
+  description: |
+    Implement OAuth 2.0 authentication flow with JWT tokens.
+    Support login, logout, and token refresh operations.
+
+  acceptance_criteria:
+    - criterion: "Users can log in with email and password"
+      eval_script: "pytest tests/e2e/test_auth.py::test_login"
+      threshold: "100% pass"
+
+    - criterion: "JWT access tokens expire after 1 hour"
+      eval_script: "pytest tests/unit/test_tokens.py::test_expiry"
+      threshold: "token.exp == now + 3600"
+
+    - criterion: "Refresh tokens can be used to get new access tokens"
+      eval_script: "pytest tests/e2e/test_auth.py::test_refresh"
+      threshold: "100% pass"
+
+  constraints:
+    nfr:
+      performance: "p99 auth latency < 300ms"
+      reliability: "99.9% uptime for auth endpoints"
+      scalability: "Support 500 concurrent auth requests"
+    dependencies: []
+    affected_areas:
+      - "src/auth/"
+      - "src/api/routes/"
+      - "src/models/user.py"
+
+  meta:
+    created_by: product_owner
+    created_at: "2024-01-15T10:00:00Z"
+    assigned_to: architect
+    stage: DESIGN

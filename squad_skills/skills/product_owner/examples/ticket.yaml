@@ -1,0 +1,140 @@
+# Example: Well-formed ticket after mission clarification
+
+meta:
+  ticket_id: "SQUAD-42"
+  mission_id: "MISSION-001"
+  author: product_owner
+  created_at: "2024-01-15T10:30:00Z"
+
+title: "Implement email/password authentication with JWT tokens"
+
+type: feature
+priority: 1
+story_points: 8
+
+description: |
+  ## Context
+  The application currently has no authentication. All users can access
+  all features without identification, which prevents personalization
+  and creates security risks.
+
+  ## Problem
+  - Cannot identify who is using the application
+  - Cannot restrict access to sensitive features
+  - Cannot persist user preferences across sessions
+
+  ## Value
+  - Enables personalized user experience
+  - Secures sensitive operations
+  - Required foundation for all user-specific features
+
+assumptions:
+  - assumption: "Web application only (no mobile)"
+    source: clarified
+    risk: LOW
+    validation: "Confirmed in MISSION-001 clarification"
+
+  - assumption: "Under 10,000 users initially"
+    source: clarified
+    risk: LOW
+    validation: "Product roadmap indicates 5,000 users in year 1"
+
+  - assumption: "No compliance requirements"
+    source: clarified
+    risk: MEDIUM
+    validation: "Legal team confirmed no GDPR/SOC2 needed yet"
+
+acceptance_criteria:
+  - criterion: "Users can register with email and password"
+    eval:
+      script: "pytest tests/e2e/test_auth.py::test_user_registration"
+      data: "Valid email, password meeting policy"
+      metric: "Registration completes in < 2s, confirmation email sent"
+    scenario:
+      given: "A new user on the registration page"
+      when: "They submit valid email and password"
+      then: "Account is created and confirmation email is sent"
+
+  - criterion: "Users can log in with valid credentials"
+    eval:
+      script: "pytest tests/e2e/test_auth.py::test_login_valid_credentials"
+      data: "Registered user credentials"
+      metric: "JWT token returned in < 500ms"
+    scenario:
+      given: "A registered user on the login page"
+      when: "They submit correct email and password"
+      then: "JWT access token and refresh token are returned"
+
+  - criterion: "Invalid credentials are rejected"
+    eval:
+      script: "pytest tests/e2e/test_auth.py::test_login_invalid_credentials"
+      data: "Invalid password for existing user"
+      metric: "401 response with generic error message"
+    scenario:
+      given: "A user attempting to log in"
+      when: "They submit incorrect password"
+      then: "Login fails with generic 'invalid credentials' error"
+
+  - criterion: "Passwords are securely hashed"
+    eval:
+      script: "pytest tests/unit/test_password.py::test_bcrypt_hashing"
+      data: "Sample passwords"
+      metric: "bcrypt with cost factor >= 12"
+    scenario:
+      given: "A password to store"
+      when: "Password is saved to database"
+      then: "Only bcrypt hash is stored, never plaintext"
+
+  - criterion: "JWT tokens expire correctly"
+    eval:
+      script: "pytest tests/unit/test_tokens.py::test_token_expiry"
+      data: "Generated JWT token"
+      metric: "Access token expires at 1 hour, refresh at 7 days"
+    scenario:
+      given: "A valid JWT access token"
+      when: "1 hour has passed"
+      then: "Token validation fails with 'token_expired' error"
+
+nfr:
+  latency:
+    p50_ms: 100
+    p95_ms: 250
+    p99_ms: 500
+    max_ms: 1000
+
+  throughput:
+    requests_per_second: 100
+    concurrent_users: 500
+    data_volume: "1GB/month"
+
+  cost:
+    api_budget_usd: 50
+    infra_budget_usd: 100
+    total_ceiling_usd: 200
+
+  reliability:
+    availability_sla: "99.9%"
+    error_rate_max: "0.1%"
+    rto_minutes: 15
+    rpo_minutes: 5
+
+business_value:
+  metric: "User retention rate"
+  current: "N/A (no users tracked)"
+  target: "Track 100% of active users"
+  measurement: "Count of authenticated sessions / total sessions"
+
+dependencies:
+  blocked_by: []
+  blocks:
+    - "SQUAD-43"  # User profile management
+    - "SQUAD-44"  # Password reset flow
+
+confidence:
+  score: 90
+  rationale: "Clear requirements from mission clarification, well-understood OAuth 2.0 patterns"
+  risks:
+    - risk: "Email delivery reliability for confirmations"
+      mitigation: "Use established email service (SendGrid, SES)"
+    - risk: "Session management at scale"
+      mitigation: "Design for Redis session store from start"

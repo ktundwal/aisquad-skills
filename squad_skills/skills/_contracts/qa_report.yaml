@@ -1,0 +1,88 @@
+# QA Report Contract v1.0.0
+# Producer: qa_engineer
+# Consumers: bouncer (Gate 3)
+
+version: "1.0.0"
+
+schema:
+  meta:
+    ticket_id: string
+    tester: qa_engineer
+    completed_at: ISO8601
+
+  # Acceptance criteria eval results (required)
+  acceptance_evals:
+    - criterion: string          # From ticket
+      eval_script: string        # What was run
+      result: enum               # PASS | FAIL
+      expected: string           # Threshold from ticket
+      actual: string             # Measured value
+      duration_ms: number
+
+  # Integration test results
+  integration_tests:
+    total: number
+    passed: number
+    failed: number
+    skipped: number
+    coverage_percent: number
+    failures:
+      - test: string
+        reason: string
+
+  # E2E test results
+  e2e_tests:
+    total: number
+    passed: number
+    failed: number
+    user_journeys_covered: [string]
+
+  # Technical evals
+  evals:
+    performance:
+      status: enum               # PASS | FAIL
+      details: string            # Benchmark results vs targets
+
+    security:
+      status: enum               # PASS | FAIL
+      vulnerabilities:
+        - severity: enum         # CRITICAL | HIGH | MEDIUM | LOW
+          description: string
+
+    coverage:
+      line_coverage: number      # Percentage
+      branch_coverage: number    # Percentage
+      uncovered_areas: [string]
+
+  # Final recommendation
+  recommendation: enum           # APPROVED | NEEDS_WORK
+  action_items: [string]         # What needs to be fixed
+
+  # Confidence
+  confidence:
+    score: number                # 0-100
+    rationale: string
+
+# Required for Gate 3 handoff
+required_for_gate_3:
+  - meta.ticket_id
+  - acceptance_evals             # All criteria must be evaluated
+  - recommendation
+  - confidence
+
+validation_rules:
+  - name: "all_criteria_evaluated"
+    description: "Every acceptance criterion must have an eval result"
+    check: "len(acceptance_evals) == ticket.acceptance_criteria.length"
+
+  - name: "no_critical_vulnerabilities"
+    description: "Critical security issues block approval"
+    check: "not any(v.severity == 'CRITICAL' for v in evals.security.vulnerabilities)"
+
+  - name: "coverage_threshold"
+    description: "Code coverage must meet minimum threshold"
+    check: "evals.coverage.line_coverage >= 80"
+
+routing:
+  APPROVED: "advance to Gate 3 review"
+  NEEDS_WORK: "return to senior_dev with action_items"

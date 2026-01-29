@@ -1,0 +1,128 @@
+# Example: Clarifying a vague mission before ticket creation
+
+meta:
+  mission_id: "MISSION-001"
+  clarifier: product_owner
+  created_at: "2024-01-15T09:00:00Z"
+
+original_mission: "Add authentication to the app"
+
+interpretation:
+  summary: "Implement user login functionality, but method and scope unclear"
+  primary_goal: "Allow users to securely access the application"
+  confidence: 0.4
+
+ambiguities:
+  - text: "authentication"
+    interpretations:
+      - meaning: "OAuth 2.0 with social providers (Google, GitHub)"
+        implications: "Need OAuth client setup, callback handling, token management"
+      - meaning: "Email/password with custom backend"
+        implications: "Need password hashing, session management, password reset flow"
+      - meaning: "SSO/SAML for enterprise"
+        implications: "Need SAML provider integration, enterprise contracts"
+    suggested_default: "Email/password with option to add OAuth later"
+
+  - text: "the app"
+    interpretations:
+      - meaning: "Web frontend only"
+        implications: "Cookie-based sessions, CSRF protection"
+      - meaning: "Web + mobile apps"
+        implications: "JWT tokens, refresh token rotation, device management"
+      - meaning: "API-only (headless)"
+        implications: "API keys, OAuth client credentials"
+    suggested_default: null
+
+missing_context:
+  - category: users
+    question: "Who are the users? Internal team, external customers, or both?"
+    why_needed: "Affects security requirements, password policies, MFA needs"
+    impact_if_wrong: HIGH
+
+  - category: scale
+    question: "How many users? Concurrent logins?"
+    why_needed: "Affects session storage, rate limiting, infrastructure"
+    impact_if_wrong: MEDIUM
+
+  - category: constraints
+    question: "Are there compliance requirements? (GDPR, SOC2, HIPAA)"
+    why_needed: "Affects data handling, audit logging, password policies"
+    impact_if_wrong: CRITICAL
+
+  - category: success_criteria
+    question: "What does 'done' look like? Just login, or full user management?"
+    why_needed: "Defines scope boundaries"
+    impact_if_wrong: HIGH
+
+default_assumptions:
+  - assumption: "Web application with server-side rendering"
+    risk: MEDIUM
+    alternative: "Could be SPA, mobile app, or API-only"
+
+  - assumption: "No compliance requirements"
+    risk: HIGH
+    alternative: "May need GDPR, SOC2, or other compliance"
+
+  - assumption: "Under 10,000 users"
+    risk: LOW
+    alternative: "Enterprise scale would need different architecture"
+
+questions:
+  - priority: 1
+    question: "What authentication method do you prefer?"
+    options:
+      - "Email/password only"
+      - "OAuth (Google, GitHub)"
+      - "Both email/password and OAuth"
+      - "SSO/SAML for enterprise"
+    default: "Email/password only"
+
+  - priority: 2
+    question: "What platforms need authentication?"
+    options:
+      - "Web only"
+      - "Web + mobile (iOS/Android)"
+      - "API only (for other services)"
+    default: null
+
+  - priority: 3
+    question: "Do you need multi-factor authentication (MFA)?"
+    options:
+      - "Yes, required for all users"
+      - "Yes, optional for users"
+      - "No, not needed"
+    default: "No, not needed"
+
+  - priority: 4
+    question: "Are there compliance requirements (GDPR, SOC2, HIPAA)?"
+    options:
+      - "Yes (please specify)"
+      - "No"
+      - "Not sure"
+    default: "No"
+
+scope_check:
+  definitely_in:
+    - "User login flow"
+    - "Secure password storage"
+
+  probably_in:
+    - "Password reset via email"
+    - "Remember me functionality"
+    - "Logout"
+
+  probably_out:
+    - "User registration (self-service)"
+    - "Email verification"
+    - "User profile management"
+
+  definitely_out:
+    - "Role-based access control (RBAC)"
+    - "Admin user management"
+    - "Audit logging"
+
+status: NEEDS_CLARIFICATION
+blockers:
+  - "Authentication method not specified"
+  - "Target platforms unknown"
+  - "Compliance requirements unclear"

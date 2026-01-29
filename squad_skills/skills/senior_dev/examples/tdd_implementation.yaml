@@ -1,0 +1,55 @@
+# Example: TDD Implementation for UserRepository.get_by_email
+
+meta:
+  ticket_id: "SQUAD-42"
+  implementer: senior_dev
+  tdd_cycle: 3
+  completed_at: "2024-01-15T11:45:00Z"
+
+tests_addressed:
+  - test_file: "tests/unit/test_user_repository.py"
+    test_name: "test_get_by_email_returns_user_when_exists"
+    status: PASSED
+
+  - test_file: "tests/unit/test_user_repository.py"
+    test_name: "test_get_by_email_returns_none_when_not_found"
+    status: PASSED
+
+changes:
+  - file: "src/repositories/user_repository.py"
+    action: modified
+    lines_added: 15
+    lines_removed: 0
+    summary: "Added get_by_email method following existing get_by_id pattern"
+
+  - file: "src/repositories/__init__.py"
+    action: modified
+    lines_added: 1
+    lines_removed: 0
+    summary: "Exported get_by_email in public API"
+
+patterns_applied:
+  - name: "Repository pattern with session injection"
+    location: "src/repositories/user_repository.py:get_by_id"
+    deviation: null
+
+  - name: "Optional return type for nullable queries"
+    location: "src/repositories/base.py:get_or_none"
+    deviation: null
+
+verification:
+  tests_run: true
+  tests_passing: true
+  linter_run: true
+  linter_clean: true
+  test_output: |
+    $ pytest tests/unit/test_user_repository.py -v
+    test_get_by_email_returns_user_when_exists PASSED
+    test_get_by_email_returns_none_when_not_found PASSED
+    ========================= 2 passed in 0.15s =========================
+
+issues: []
+
+confidence:
+  score: 0.95
+  rationale: "Direct pattern match with existing get_by_id. All tests pass, linter clean."

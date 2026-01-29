@@ -1,0 +1,96 @@
+# Ticket Template
+# Use this AFTER mission is clarified to create implementable tickets
+
+meta:
+  ticket_id: string            # e.g., "SQUAD-123"
+  mission_id: string           # Reference to parent mission
+  author: product_owner
+  created_at: ISO8601
+
+# Title must be action-oriented
+title: string                  # e.g., "Implement OAuth 2.0 authentication"
+
+# Ticket type
+type: enum                     # feature | bug | spike | tech_debt
+
+# Priority (1 = highest)
+priority: number               # 1-5
+
+# Story points (Fibonacci)
+story_points: enum             # 1 | 2 | 3 | 5 | 8 | 13
+
+# Why this is needed (not what)
+description: |
+  ## Context
+  <business context>
+
+  ## Problem
+  <what problem this solves>
+
+  ## Value
+  <why this matters>
+
+# Documented assumptions
+assumptions:
+  - assumption: string         # What you're assuming
+    source: enum               # mission_doc | inferred | industry_standard | clarified
+    risk: enum                 # LOW | MEDIUM | HIGH
+    validation: string         # How to verify this assumption
+
+# Acceptance criteria with executable evals (REQUIRED)
+acceptance_criteria:
+  - criterion: string          # Testable statement
+
+    eval:
+      script: string           # pytest path, shell command, or API call
+      data: string | null      # Test fixtures needed
+      metric: string           # Success threshold (numbers, not adjectives)
+
+    scenario:
+      given: string            # Precondition
+      when: string             # Action
+      then: string             # Expected outcome
+
+# Non-Functional Requirements (MANDATORY)
+nfr:
+  latency:
+    p50_ms: number
+    p95_ms: number
+    p99_ms: number
+    max_ms: number             # Hard ceiling
+
+  throughput:
+    requests_per_second: number
+    concurrent_users: number
+    data_volume: string        # e.g., "10GB/day"
+
+  cost:
+    api_budget_usd: number     # Per month
+    infra_budget_usd: number   # Per month
+    total_ceiling_usd: number  # Hard ceiling
+
+  reliability:
+    availability_sla: string   # e.g., "99.9%"
+    error_rate_max: string     # e.g., "0.1%"
+    rto_minutes: number        # Recovery time objective
+    rpo_minutes: number        # Recovery point objective
+
+# Business value measurement
+business_value:
+  metric: string               # What improves when this ships
+  current: string              # Current value
+  target: string               # Target value
+  measurement: string          # How to measure
+
+# Dependencies
+dependencies:
+  blocked_by: [string]         # Ticket IDs that must complete first
+  blocks: [string]             # Ticket IDs waiting on this
+
+# Confidence assessment
+confidence:
+  score: number                # 0-100
+  rationale: string
+  risks:
+    - risk: string
+      mitigation: string

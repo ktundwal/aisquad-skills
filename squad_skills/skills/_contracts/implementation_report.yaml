@@ -1,0 +1,51 @@
+# Implementation Report Contract v1.0.0
+# Producer: senior_dev
+# Consumers: bouncer (Gate 2), qa_engineer
+
+version: "1.0.0"
+
+# Reference to full template
+template: "../senior_dev/templates/implementation_report.yaml"
+
+# Required sections for handoff
+required_for_gate_2:
+  - meta.ticket_id
+  - meta.tdd_cycle
+  - tests_addressed              # What tests were made to pass
+  - changes                      # What files were changed
+  - verification.tests_passing   # Tests must pass
+  - verification.linter_clean    # Linter must pass
+  - confidence
+
+required_for_qa:
+  - meta.ticket_id
+  - changes                      # Files to test
+  - patterns_applied             # Patterns to verify
+
+# Completion criteria
+completion_rules:
+  - name: "all_tests_passing"
+    description: "Cannot hand off with failing tests"
+    check: "verification.tests_passing == true"
+
+  - name: "linter_clean"
+    description: "Linter must pass before handoff"
+    check: "verification.linter_clean == true"
+
+  - name: "tests_actually_addressed"
+    description: "At least one test must be addressed"
+    check: "len(tests_addressed) > 0"
+
+  - name: "changes_documented"
+    description: "All changes must be documented"
+    check: "len(changes) > 0"
+
+# Routing rules
+routing:
+  tests_passing:
+    true: "advance to Gate 2 review"
+    false: "continue TDD cycle, next test"
+
+  spike_needed:
+    true: "pause, request spike from architect"
+    false: "continue implementation"

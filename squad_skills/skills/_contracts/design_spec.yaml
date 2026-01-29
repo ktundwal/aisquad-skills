@@ -1,0 +1,41 @@
+# Design Specification Contract v1.0.0
+# Producer: architect
+# Consumers: bouncer (Gate 1), senior_dev, dev
+
+version: "1.0.0"
+
+# Reference to full template
+template: "../architect/templates/design_spec.yaml"
+
+# Required sections for handoff
+required_for_gate_1:
+  - meta                         # Ticket ID, author, version
+  - assumptions                  # At least one assumption documented
+  - overview                     # High-level design summary
+  - interfaces                   # At least one interface definition
+  - threat_model                 # STRIDE analysis (mandatory)
+  - nfr                          # Non-functional requirements
+  - confidence                   # Overall confidence score
+
+required_for_dev:
+  - meta
+  - interfaces                   # What to implement
+  - data_flow                    # How components interact
+  - error_handling               # Error scenarios to handle
+
+validation_rules:
+  - name: "threat_model_complete"
+    description: "STRIDE threat model must cover at least 4 categories"
+    check: "len(set(t.category for t in threat_model)) >= 4"
+
+  - name: "nfr_measurable"
+    description: "NFRs must have numeric targets"
+    check: "nfr.performance.p50_latency_ms is number"
+
+  - name: "confidence_reasonable"
+    description: "Low confidence (<0.6) should trigger spike request"
+    check: "confidence.overall >= 0.6 or open_questions contains 'spike'"
+
+  - name: "interfaces_testable"
+    description: "Each interface should be independently testable"
+    check: "all interfaces have 'Protocol' or 'ABC' in definition"

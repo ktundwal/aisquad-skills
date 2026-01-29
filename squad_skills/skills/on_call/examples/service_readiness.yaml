@@ -1,0 +1,138 @@
+# Example: Operational Readiness Review for Auth Service
+
+meta:
+  ticket_id: "SQUAD-42"
+  reviewer: on_call
+  deployment_type: service
+  reviewed_at: "2024-01-17T14:00:00Z"
+
+five_twenty_five:
+  time_to_detect:
+    target_minutes: 5
+    estimated_minutes: 2
+    confidence: 90
+    rationale: "Health check every 30s, alerts fire at 3 consecutive failures (1.5 min), notification within 30s"
+    status: MEETS
+
+  time_to_resolve:
+    target_minutes: 25
+    estimated_minutes: 15
+    confidence: 85
+    rationale: "Rollback tested at 5 min, runbooks complete, feature flags in place"
+    status: MEETS
+
+observability:
+  metrics:
+    status: COMPLETE
+    items:
+      - name: "squad_auth_request_duration_seconds"
+        type: histogram
+        implemented: true
+        dashboard: "https://grafana/d/auth-overview"
+
+      - name: "squad_auth_login_total"
+        type: counter
+        implemented: true
+        dashboard: "https://grafana/d/auth-overview"
+
+      - name: "squad_auth_active_sessions"
+        type: gauge
+        implemented: true
+        dashboard: "https://grafana/d/auth-overview"
+    gaps: []
+
+  logging:
+    status: COMPLETE
+    structured: true
+    trace_ids: true
+    levels_appropriate: true
+    pii_check: PASS
+    gaps: []
+
+  alerting:
+    status: COMPLETE
+    alerts:
+      - name: "squad_auth_high_error_rate_critical"
+        condition: "error_rate > 5% for 2m"
+        severity: critical
+        runbook: "https://wiki/runbooks/auth-errors"
+
+      - name: "squad_auth_high_latency_warning"
+        condition: "p99_latency > 500ms for 5m"
+        severity: warning
+        runbook: "https://wiki/runbooks/auth-latency"
+
+      - name: "squad_auth_login_failures_warning"
+        condition: "login_failures > 100/min"
+        severity: warning
+        runbook: "https://wiki/runbooks/login-failures"
+    gaps: []
+
+  dashboards:
+    status: COMPLETE
+    links:
+      - "https://grafana/d/auth-overview"
+      - "https://grafana/d/auth-detailed"
+    gaps: []
+
+detectability:
+  health_checks:
+    implemented: true
+    endpoints:
+      - "/health/live"
+      - "/health/ready"
+    frequency_seconds: 30
+
+  synthetic_monitoring:
+    implemented: true
+    critical_paths_covered:
+      - "Login flow"
+      - "Token refresh"
+    gaps: []
+
+  on_call_notification:
+    configured: true
+    escalation_path: "PagerDuty: on-call-primary -> on-call-secondary -> engineering-lead"
+
+recoverability:
+  rollback:
+    procedure_documented: true
+    tested: true
+    estimated_minutes: 5
+    runbook_link: "https://wiki/runbooks/auth-rollback"
+
+  feature_flags:
+    kill_switches:
+      - "auth.oauth_enabled"
+      - "auth.mfa_required"
+    tested: true
+
+  data_recovery:
+    backup_exists: true
+    restore_tested: true
+    rpo_minutes: 5
+    rto_minutes: 15
+
+supportability:
+  error_messages:
+    actionable: true
+    unique_codes: true
+
+  documentation:
+    troubleshooting_guide: true
+    known_issues: true
+    architecture_diagram: true
+
+  reproduction:
+    local_env_documented: true
+    test_data_available: true
+
+decision: APPROVED
+
+conditions: []
+
+blockers: []
+
+confidence:
+  score: 92
+  rationale: "All observability in place, 5-25 targets met with margin, rollback tested"

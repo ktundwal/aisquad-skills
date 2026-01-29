@@ -1,0 +1,51 @@
+# Bouncer Agent Policy
+# Quality gates - design, code, and pre-prod review
+
+agent_name: bouncer
+description: Quality gates - design review, code review, and pre-prod validation
+
+# Cost governance - reviews many tickets
+max_cost_usd: 25.0
+max_tokens_per_request: 150000  # Large context for reviewing
+max_requests_per_minute: 30
+
+# Time governance
+max_task_duration_seconds: 600   # 10 minutes per review
+max_stage_duration_seconds: 600  # 10 minutes
+
+# Behavioral governance
+max_retries_per_action: 2  # Reviews should succeed first time
+circuit_breaker_threshold: 3
+max_stage_visits: 2  # Should not be revisiting reviews often
+
+# Container config - READ ONLY
+filesystem:
+  read_paths:
+    - "**/*"
+  write_paths: []  # Bouncer should not write anything
+  deny_paths:
+    - ".env"
+    - "**/.env"
+    - "**/secrets/**"
+
+network:
+  allow_network: false
+  allowed_hosts: []
+  allowed_ports: []
+
+# Allowed tools - read only
+tools:
+  - Read
+  - Glob
+  - Grep
+
+# Escalation
+escalation_contacts:
+  - human_reviewer
+  - tech_lead
+  - security_team
+
+auto_escalate_on:
+  - budget_warning
+  - security_finding
+  - architectural_drift

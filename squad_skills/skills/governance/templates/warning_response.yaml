@@ -1,0 +1,29 @@
+# Warning Response Template
+# Use this format when responding to governance warnings
+
+warning_response:
+  warning_type: "{budget|time|rate_limit|circuit_breaker}"
+
+  current_status:
+    metric: "{budget_usd|time_minutes|requests}"
+    current_value: "{value}"
+    limit_value: "{limit}"
+    percentage: "{percent}%"
+
+  assessment:
+    remaining_work:
+      - "{task_1_brief_description}"
+      - "{task_2_brief_description}"
+    estimated_cost: "{amount_or_time}"
+    can_complete_within_limits: "{yes|no|uncertain}"
+
+  action_plan:
+    if_can_complete:
+      - "{step_1}"
+      - "{step_2}"
+    if_cannot_complete:
+      - "Save current progress"
+      - "Document remaining tasks"
+      - "Escalate with recommendation"
+
+  immediate_action: "{what_you_will_do_now}"

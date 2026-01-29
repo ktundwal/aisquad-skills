@@ -1,0 +1,42 @@
+# Escalation Template
+# Use this format when escalating to human review
+
+escalation:
+  reason: "{brief_reason}"
+
+  context:
+    task: "{what_you_were_doing}"
+    ticket_id: "{ticket_id_if_applicable}"
+    agent: "{your_agent_name}"
+    stage: "{current_workflow_stage}"
+
+  attempts:
+    - attempt: 1
+      action: "{what_you_tried}"
+      result: "{what_happened}"
+    - attempt: 2
+      action: "{second_attempt}"
+      result: "{what_happened}"
+
+  blocker:
+    type: "{budget|time|loop|unclear|security|technical}"
+    details: "{specific_issue}"
+
+  metrics:
+    budget_spent: "{amount_usd}"
+    budget_remaining: "{amount_usd}"
+    time_elapsed: "{minutes}"
+    time_remaining: "{minutes}"
+
+  recommendation:
+    suggested_action: "{what_you_recommend}"
+    alternatives:
+      - "{option_1}"
+      - "{option_2}"
+
+  required_decision:
+    question: "{specific_yes_no_or_choice_question}"
+    options:
+      - "{option_a}"
+      - "{option_b}"
+      - "Abort task"

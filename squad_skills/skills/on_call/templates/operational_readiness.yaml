@@ -1,0 +1,117 @@
+# Operational Readiness Review Template
+# Use this to verify code can be supported in production
+
+meta:
+  ticket_id: string
+  reviewer: on_call
+  deployment_type: enum        # service | application | cli | library
+  reviewed_at: ISO8601
+
+# The 5-25 Rule Assessment
+five_twenty_five:
+  time_to_detect:
+    target_minutes: 5
+    estimated_minutes: number
+    confidence: number         # 0-100
+    rationale: string
+    status: enum               # MEETS | AT_RISK | FAILS
+
+  time_to_resolve:
+    target_minutes: 25
+    estimated_minutes: number
+    confidence: number         # 0-100
+    rationale: string
+    status: enum               # MEETS | AT_RISK | FAILS
+
+# Observability Checklist
+observability:
+  metrics:
+    status: enum               # COMPLETE | PARTIAL | MISSING
+    items:
+      - name: string           # Metric name
+        type: enum             # counter | gauge | histogram
+        implemented: boolean
+        dashboard: string | null  # Link to dashboard
+    gaps: [string]
+
+  logging:
+    status: enum               # COMPLETE | PARTIAL | MISSING
+    structured: boolean        # JSON format
+    trace_ids: boolean         # Correlation IDs present
+    levels_appropriate: boolean
+    pii_check: enum            # PASS | FAIL | NOT_CHECKED
+    gaps: [string]
+
+  alerting:
+    status: enum               # COMPLETE | PARTIAL | MISSING
+    alerts:
+      - name: string
+        condition: string
+        severity: enum         # critical | warning | info
+        runbook: string | null # REQUIRED for critical/warning
+    gaps: [string]
+
+  dashboards:
+    status: enum               # COMPLETE | PARTIAL | MISSING
+    links: [string]
+    gaps: [string]
+
+# Detectability (will we know in 5 min?)
+detectability:
+  health_checks:
+    implemented: boolean
+    endpoints: [string]
+    frequency_seconds: number
+
+  synthetic_monitoring:
+    implemented: boolean
+    critical_paths_covered: [string]
+    gaps: [string]
+
+  on_call_notification:
+    configured: boolean
+    escalation_path: string | null
+
+# Recoverability (can we fix in 25 min?)
+recoverability:
+  rollback:
+    procedure_documented: boolean
+    tested: boolean
+    estimated_minutes: number
+    runbook_link: string | null
+
+  feature_flags:
+    kill_switches: [string]    # Features that can be disabled
+    tested: boolean
+
+  data_recovery:
+    backup_exists: boolean
+    restore_tested: boolean
+    rpo_minutes: number        # Recovery point objective
+    rto_minutes: number        # Recovery time objective
+
+# Supportability (can we debug it?)
+supportability:
+  error_messages:
+    actionable: boolean        # Do errors tell users what to do?
+    unique_codes: boolean      # Can we identify specific errors?
+
+  documentation:
+    troubleshooting_guide: boolean
+    known_issues: boolean
+    architecture_diagram: boolean
+
+  reproduction:
+    local_env_documented: boolean
+    test_data_available: boolean
+
+# Final Decision
+decision: enum                 # APPROVED | CONDITIONAL | REJECTED
+
+conditions: [string]           # If CONDITIONAL, what must be fixed
+
+blockers: [string]             # If REJECTED, why
+
+confidence:
+  score: number                # 0-100
+  rationale: string

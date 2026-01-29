@@ -1,0 +1,55 @@
+# Mission Clarification Template
+# Use this BEFORE creating tickets when the mission is unclear
+
+meta:
+  mission_id: string           # Reference to original mission
+  clarifier: product_owner
+  created_at: ISO8601
+
+# Original mission as received
+original_mission: string       # Copy verbatim what the human said
+
+# What you understood (may be incomplete/wrong)
+interpretation:
+  summary: string              # Your understanding in 1-2 sentences
+  primary_goal: string         # What you think they want to achieve
+  confidence: number           # 0.0 - 1.0
+
+# Ambiguities identified
+ambiguities:
+  - text: string               # The ambiguous phrase
+    interpretations:           # Possible meanings
+      - meaning: string
+        implications: string   # What this would mean for implementation
+    suggested_default: string | null  # What you'd assume if not answered
+
+# Missing information
+missing_context:
+  - category: enum             # users | scale | constraints | success_criteria | timeline
+    question: string           # Specific question to ask
+    why_needed: string         # How this affects the tickets
+    impact_if_wrong: enum      # LOW | MEDIUM | HIGH | CRITICAL
+
+# Assumptions you would make if not clarified
+default_assumptions:
+  - assumption: string
+    risk: enum                 # LOW | MEDIUM | HIGH
+    alternative: string        # What else it could be
+
+# Questions for the human (prioritized)
+questions:
+  - priority: number           # 1 = most critical
+    question: string           # Clear, specific question
+    options: [string] | null   # Multiple choice if applicable
+    default: string | null     # What you'll assume if not answered
+
+# Scope boundaries
+scope_check:
+  definitely_in: [string]      # Clearly part of the mission
+  probably_in: [string]        # Likely part, but confirm
+  probably_out: [string]       # Likely not part, but confirm
+  definitely_out: [string]     # Clearly not part of the mission
+
+# Ready to proceed?
+status: enum                   # NEEDS_CLARIFICATION | READY_TO_DECOMPOSE
+blockers: [string]             # What must be answered before proceeding

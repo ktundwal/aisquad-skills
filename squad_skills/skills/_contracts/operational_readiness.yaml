@@ -1,0 +1,103 @@
+# Operational Readiness Contract v1.0.0
+# Producer: on_call
+# Consumers: bouncer (Gate 3)
+
+version: "1.0.0"
+
+# Reference to full template
+template: "../on_call/templates/operational_readiness.yaml"
+
+# Required for Gate 3 handoff
+required_for_gate_3:
+  - meta.ticket_id
+  - meta.deployment_type
+  - five_twenty_five.time_to_detect.status
+  - five_twenty_five.time_to_resolve.status
+  - observability.metrics.status
+  - observability.logging.status
+  - observability.alerting.status
+  - decision
+  - confidence
+
+# The 5-25 Rule
+five_twenty_five_targets:
+  time_to_detect_minutes: 5
+  time_to_resolve_minutes: 25
+
+validation_rules:
+  - name: "5_minute_detection"
+    description: "Problems must be detectable within 5 minutes"
+    check: "five_twenty_five.time_to_detect.status in ['MEETS', 'AT_RISK']"
+    on_fail: "Cannot ship code that won't be detected when broken"
+
+  - name: "25_minute_resolution"
+    description: "Incidents must be resolvable within 25 minutes"
+    check: "five_twenty_five.time_to_resolve.status in ['MEETS', 'AT_RISK']"
+    on_fail: "Cannot ship code without recovery plan"
+
+  - name: "alerts_have_runbooks"
+    description: "Every critical/warning alert must have a runbook"
+    check: "all alerts with severity in [critical, warning] have runbook != null"
+    on_fail: "Alerts without runbooks create toil and slow resolution"
+
+  - name: "observability_present"
+    description: "Cannot ship unobservable code"
+    check: "observability.metrics.status != 'MISSING' and observability.logging.status != 'MISSING'"
+    on_fail: "If we can't see it, we can't support it"
+
+# Decision criteria
+decision_rules:
+  APPROVED:
+    - "five_twenty_five.time_to_detect.status == 'MEETS'"
+    - "five_twenty_five.time_to_resolve.status == 'MEETS'"
+    - "observability.alerting.status in ['COMPLETE', 'PARTIAL']"
+    - "all blockers resolved"
+
+  CONDITIONAL:
+    - "five_twenty_five.time_to_detect.status == 'AT_RISK'"
+    - "OR five_twenty_five.time_to_resolve.status == 'AT_RISK'"
+    - "conditions list non-empty"
+
+  REJECTED:
+    - "five_twenty_five.time_to_detect.status == 'FAILS'"
+    - "OR five_twenty_five.time_to_resolve.status == 'FAILS'"
+    - "OR observability.*.status == 'MISSING'"
+
+# Routing rules
+routing:
+  APPROVED: "advance to Gate 3 bouncer review"
+  CONDITIONAL: "advance with documented conditions"
+  REJECTED: "return to senior_dev with blockers"
+
+# Deployment-specific requirements
+deployment_type_requirements:
+  service:
+    required:
+      - health_checks
+      - metrics
+      - structured_logging
+      - alerting
+    optional:
+      - synthetic_monitoring
+
+  application:
+    required:
+      - crash_reporting
+      - error_boundaries
+    optional:
+      - analytics
+      - feature_flags
+
+  cli:
+    required:
+      - exit_codes_documented
+      - error_messages_actionable
+    optional:
+      - telemetry_opt_in
+
+  library:
+    required:
+      - deprecation_warnings
+      - error_handling_documented
+    optional:
+      - telemetry

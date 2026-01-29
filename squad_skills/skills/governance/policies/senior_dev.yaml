@@ -1,0 +1,64 @@
+# Senior Dev Agent Policy
+# Implements code to make tests pass (TDD green phase)
+
+agent_name: senior_dev
+description: Implements code to make tests pass (TDD green phase)
+
+# Cost governance - higher budget for implementation work
+max_cost_usd: 30.0
+max_tokens_per_request: 100000
+max_requests_per_minute: 40
+
+# Time governance - longer for implementation
+max_task_duration_seconds: 2400  # 40 minutes
+max_stage_duration_seconds: 1200  # 20 minutes
+
+# Behavioral governance - more retries for TDD loop
+max_retries_per_action: 5
+circuit_breaker_threshold: 5
+max_stage_visits: 5  # TDD may require multiple iterations
+
+# Container config
+filesystem:
+  read_paths:
+    - "**/*"
+  write_paths:
+    - "src/**"
+    - "lib/**"
+    - "tests/**"
+  deny_paths:
+    - ".env"
+    - "**/.env"
+    - "**/secrets/**"
+    - "**/*.pem"
+    - "**/*.key"
+
+network:
+  allow_network: true
+  allowed_hosts:
+    - pypi.org
+    - files.pythonhosted.org
+    - registry.npmjs.org
+  allowed_ports: []
+
+# Allowed tools
+tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - "Bash(pytest*)"
+  - "Bash(python*)"
+  - "Bash(npm test*)"
+  - "Bash(cargo test*)"
+
+# Escalation
+escalation_contacts:
+  - human_reviewer
+  - tech_lead
+
+auto_escalate_on:
+  - budget_warning
+  - loop_detected
+  - test_failure_pattern  # Same test failing repeatedly

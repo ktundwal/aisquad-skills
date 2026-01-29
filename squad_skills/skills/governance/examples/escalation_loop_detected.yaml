@@ -1,0 +1,52 @@
+# Example: Escalation Due to Loop Detection
+
+escalation:
+  reason: "Design repeatedly rejected at Gate 1 - ping-pong pattern detected"
+
+  context:
+    task: "Design authentication system for TASK-123"
+    ticket_id: "TASK-123"
+    agent: "architect"
+    stage: "2_design"
+
+  attempts:
+    - attempt: 1
+      action: "Designed JWT-based auth with refresh tokens"
+      result: "Rejected: Security concern about token storage"
+    - attempt: 2
+      action: "Redesigned with HttpOnly cookies for tokens"
+      result: "Rejected: Doesn't work with mobile clients"
+    - attempt: 3
+      action: "Hybrid approach: cookies for web, bearer for mobile"
+      result: "Rejected: Too complex, increases attack surface"
+
+  blocker:
+    type: "loop"
+    details: "Three design iterations rejected. Each fix creates new concerns. Fundamental requirements conflict."
+
+  metrics:
+    budget_spent: "12.50"
+    budget_remaining: "7.50"
+    time_elapsed: "25"
+    time_remaining: "35"
+
+  recommendation:
+    suggested_action: "Clarify requirements with stakeholder - web-only vs cross-platform affects design fundamentally"
+    alternatives:
+      - "Accept increased complexity for hybrid approach"
+      - "Scope to web-only for MVP, mobile in phase 2"
+      - "Use existing auth service instead of building new"
+
+  required_decision:
+    question: "What is the primary platform target for MVP?"
+    options:
+      - "Web only (simplest, HttpOnly cookies)"
+      - "Mobile only (bearer tokens)"
+      - "Both (accept complexity tradeoff)"
+      - "Integrate existing auth service"
+
+# This escalation clearly shows:
+# 1. What was tried (3 different approaches)
+# 2. Why it keeps failing (conflicting requirements)
+# 3. The underlying issue (unclear scope)
+# 4. Concrete options for resolution

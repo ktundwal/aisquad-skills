@@ -1,0 +1,87 @@
+# Review Decision Template
+# Fill in all sections relevant to the gate being reviewed.
+# Use null for sections that don't apply to the current gate.
+
+meta:
+  ticket_id: string          # e.g., "SQUAD-123"
+  gate: enum                 # gate_1 | gate_2 | gate_3
+  reviewer: bouncer
+  reviewed_at: ISO8601       # e.g., "2024-01-15T10:30:00Z"
+
+# Final decision
+decision: enum               # APPROVED | REJECTED
+
+# Gate 1 (Design Review) - null for other gates
+design_review:
+  acceptance_criteria_coverage: PASS | FAIL | NA
+  interfaces_clarity: PASS | FAIL | NA
+  error_handling_considered: PASS | FAIL | NA
+  scope_appropriate: PASS | FAIL | NA
+  tdd_testable: PASS | FAIL | NA
+  nfr_specified: PASS | FAIL | NA
+  observability_defined: PASS | FAIL | NA
+  eval_criteria_measurable: PASS | FAIL | NA
+  stride_complete: PASS | FAIL | NA
+  system_context_analyzed: PASS | FAIL | NA  # brownfield only
+
+# Gate 2 (Code Review) - null for other gates
+code_review:
+  implementation_matches_design: PASS | FAIL | NA
+  tests_passing: PASS | FAIL | NA
+  code_style: PASS | FAIL | NA
+  error_handling: PASS | FAIL | NA
+
+  # Architectural drift check
+  architectural_drift:
+    circular_dependencies: PASS | FAIL | WARNING
+    layer_violations: PASS | FAIL | WARNING
+    god_objects: PASS | FAIL | WARNING
+    pattern_consistency: PASS | FAIL | WARNING
+    complexity_budget: PASS | FAIL | WARNING
+    details: string | null   # Explanation of any failures/warnings
+
+  # Dead code detection
+  dead_code:
+    unused_imports: PASS | FAIL | WARNING
+    unused_functions: PASS | FAIL | WARNING
+    unreachable_code: PASS | FAIL
+    commented_code: PASS | FAIL
+    vulture_output: |
+      # Paste vulture output here if run
+      string | null
+
+  # Security checklist
+  security:
+    hardcoded_secrets: PASS | FAIL
+    input_validation: PASS | FAIL
+    sql_injection: PASS | FAIL
+    xss: PASS | FAIL
+    auth_checks: PASS | FAIL
+    dependencies: PASS | FAIL
+    sensitive_logging: PASS | FAIL
+
+# Gate 3 (Pre-Production) - null for other gates
+preprod_review:
+  all_tests_passing: PASS | FAIL | NA
+  performance_meets_nfr: PASS | FAIL | NA
+  observability_implemented: PASS | FAIL | NA
+  documentation_complete: PASS | FAIL | NA
+  runbooks_created: PASS | FAIL | NA
+
+# Detailed feedback (always required)
+feedback:
+  summary: string            # One-sentence summary of the review
+  strengths: [string]        # What was done well
+  issues: [string]           # Problems found (if any)
+  suggestions: [string]      # Non-blocking recommendations
+
+# Required changes (only if REJECTED)
+action_items:
+  - description: string      # What needs to change
+    severity: enum           # blocker | must_fix | should_fix
+    location: string | null  # File:line if applicable
+
+# Confidence assessment
+confidence:
+  score: number              # 0-100 percentage
+  rationale: string          # Why this confidence level
